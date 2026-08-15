@@ -6,98 +6,159 @@
   <title>Weather AI — 화성시</title>
   <style>
     :root{
-      --glass-bg: rgba(255,255,255,0.06);
+      --accent: #60a5fa;
       --glass-border: rgba(255,255,255,0.18);
-      --chip-bg: rgba(255,255,255,0.9);
-      --accent: rgba(96,165,250,0.95);
+      --card-bg: rgba(255,255,255,0.08);
+      --text-dark: #06253a;
     }
     html,body{height:100%;margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Noto Sans KR","Apple SD Gothic Neo","Malgun Gothic",sans-serif;-webkit-font-smoothing:antialiased}
     body{
-      /* 배경: 푸른 하늘+초원 느낌 이미지 + 그라데이션 오버레이 */
       background-image: url('https://images.unsplash.com/photo-1501785888041-af3ef285b470?auto=format&fit=crop&w=1800&q=80');
       background-size:cover;background-position:center;
-      display:flex;align-items:center;justify-content:center;padding:32px;
-      color:#06253a;
+      display:flex;align-items:center;justify-content:center;padding:28px;color:var(--text-dark);
     }
-    /* 반투명 흐림(글래스모피즘) 전체 래퍼 */
+
+    /* 전체 카드 감싸기 */
+    .container{
+      width:min(1100px,96%);
+      max-width:1100px;
+      display:flex;
+      flex-direction:column;
+      gap:18px;
+    }
+
     .card {
-      width:min(1100px,95%);
-      min-height:60vh;
-      background:linear-gradient(180deg, rgba(255,255,255,0.12), rgba(255,255,255,0.06));
-      border-radius:28px;
-      box-shadow: 0 20px 50px rgba(2,6,23,0.45);
-      border: 1px solid var(--glass-border);
+      border-radius:24px;
+      background:linear-gradient(180deg, rgba(255,255,255,0.14), rgba(255,255,255,0.06));
+      border:1px solid var(--glass-border);
       backdrop-filter: blur(10px) saturate(120%);
       -webkit-backdrop-filter: blur(10px) saturate(120%);
-      padding:28px;
+      box-shadow: 0 18px 48px rgba(2,6,23,0.45);
+      padding:22px;
       box-sizing:border-box;
-      position:relative;
-      overflow:hidden;
     }
-    /* 희미한 흰색 안개 효과 레이어 */
-    .card::before{
-      content:"";position:absolute;inset:0;background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.06));pointer-events:none;border-radius:28px;
+
+    /* 상단 대형 예보 영역 */
+    .forecast{
+      display:flex;gap:20px;align-items:center;
+      min-height:360px;border-radius:20px;padding:28px;background:linear-gradient(180deg, rgba(255,255,255,0.06), rgba(255,255,255,0.03));
+      position:relative;overflow:hidden;
     }
-    header{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:18px}
-    .title{display:flex;align-items:center;gap:12px}
-    .logo{width:52px;height:52px;border-radius:12px;background:linear-gradient(135deg,var(--accent),#34d399);display:flex;align-items:center;justify-content:center;font-weight:800;color:#023047;box-shadow:0 8px 20px rgba(2,48,71,0.18)}
-    h1{margin:0;font-size:1.25rem}
-    p.lead{margin:0;opacity:0.85}
+    .forecast .left{flex:1;display:flex;flex-direction:column;gap:10px}
+    .city{font-size:1rem;font-weight:700;opacity:0.95}
+    .updated{font-size:0.9rem;opacity:0.75}
+    .temp{font-size:7.5rem;font-weight:800;line-height:0.85;margin:6px 0;color:#021526}
+    .condition{display:flex;align-items:center;gap:12px}
+    .cond-icon{width:86px;height:86px;border-radius:18px;background:linear-gradient(135deg,#fff 10%,rgba(255,255,255,0.6));display:flex;align-items:center;justify-content:center;font-size:36px;box-shadow:0 10px 30px rgba(2,6,23,0.14)}
 
-    /* 위치 칩 — 왼쪽 상단 (화성시) */
-    .location-chip{position:absolute;left:28px;top:28px;background:rgba(255,255,255,0.85);color:#06253a;padding:8px 14px;border-radius:999px;font-weight:600;box-shadow:0 6px 18px rgba(2,6,23,0.08)}
+    /* 우측 요약 */
+    .summary{width:320px;display:flex;flex-direction:column;gap:12px}
+    .card-mini{background:rgba(255,255,255,0.06);border-radius:14px;padding:12px;border:1px solid rgba(255,255,255,0.06)}
+    .highlow{display:flex;gap:12px;justify-content:space-between}
 
-    main{display:flex;gap:18px}
-    .iframe-wrap{flex:1;border-radius:18px;overflow:hidden;border:1px solid rgba(255,255,255,0.12);background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));height:66vh}
-    iframe{width:100%;height:100%;border:0;display:block}
+    /* 시간별 타임라인 */
+    .timeline{margin-top:12px;display:flex;gap:10px;align-items:center;padding:12px;border-radius:12px;background:rgba(255,255,255,0.02);overflow:auto}
+    .hour{min-width:78px;background:linear-gradient(180deg, rgba(255,255,255,0.06), rgba(255,255,255,0.03));border-radius:12px;padding:10px;text-align:center;border:1px solid rgba(255,255,255,0.03)}
+    .hour.active{box-shadow:0 8px 22px rgba(2,6,23,0.12);transform:translateY(-4px)}
+    .hour .h{font-weight:700}
+    .hour .deg{font-size:1.25rem;margin-top:6px}
 
-    /* 하단 입력 바 영역 */
-    .input-row{margin-top:18px;display:flex;align-items:center;gap:12px}
-    .input{flex:1;background:rgba(255,255,255,0.12);border-radius:999px;padding:12px 16px;border:1px solid rgba(255,255,255,0.06);color:#06253a}
-    .send{width:48px;height:48px;border-radius:50%;background:var(--accent);display:flex;align-items:center;justify-content:center;color:white;border:none;cursor:pointer;box-shadow:0 8px 18px rgba(96,165,250,0.18)}
+    /* 챗봇 영역 - 하단 */
+    .chatbot-wrap{height:320px;border-radius:16px;overflow:hidden;border:1px solid rgba(255,255,255,0.06);background:linear-gradient(180deg, rgba(255,255,255,0.03), rgba(255,255,255,0.01));}
+    .chatbot-wrap iframe{width:100%;height:100%;border:0;display:block}
 
-    footer{position:absolute;right:22px;bottom:18px;color:rgba(2,6,23,0.6);font-size:0.85rem}
+    /* 위치 칩 */
+    .location-chip{position:absolute;left:28px;top:18px;background:rgba(255,255,255,0.9);color:#06253a;padding:8px 14px;border-radius:999px;font-weight:700;box-shadow:0 8px 24px rgba(2,6,23,0.06)}
 
-    @media (max-width:720px){.card{padding:16px}.iframe-wrap{height:50vh}.logo{width:44px;height:44px}.location-chip{left:16px;top:16px}}
+    footer{color:rgba(2,6,23,0.6);font-size:0.85rem;text-align:right}
+
+    @media (max-width:900px){
+      .forecast{flex-direction:column;align-items:flex-start}
+      .summary{width:100%}
+      .temp{font-size:5rem}
+      .chatbot-wrap{height:300px}
+    }
   </style>
 </head>
 <body>
-  <div class="card" role="main">
-    <div class="location-chip" id="locationChip">화성시</div>
-    <header>
-      <div class="title">
-        <div class="logo">W</div>
-        <div>
-          <h1>Weather AI</h1>
-          <p class="lead">실시간 날씨를 대화형으로 확인하세요 — 기본 위치: 화성시</p>
+  <div class="container">
+
+    <div class="card forecast" aria-label="대형 예보 카드">
+      <div class="location-chip">화성시</div>
+
+      <div class="left">
+        <div class="updated">실시간 관측 · 15:00</div>
+        <div class="city">화성시</div>
+        <div class="temp" id="temp">32<span style="font-size:0.35em">°</span></div>
+        <div class="condition">
+          <div class="cond-icon">☀️</div>
+          <div>
+            <div style="font-weight:800;font-size:1.05rem">맑음</div>
+            <div style="opacity:0.75;margin-top:6px">체감 31° · 강수확률 0% · 습도 60%</div>
+          </div>
+        </div>
+
+        <div style="margin-top:18px">
+          <div style="font-weight:700;margin-bottom:8px">타임라인</div>
+          <div class="timeline" id="timeline">
+            <div class="hour"> <div class="h">14:00</div> <div class="deg">30°</div> <div style="opacity:.7">☀️</div></div>
+            <div class="hour active"> <div class="h">15:00</div> <div class="deg">32°</div> <div style="opacity:.7">☀️</div></div>
+            <div class="hour"> <div class="h">16:00</div> <div class="deg">32°</div> <div style="opacity:.7">☀️</div></div>
+            <div class="hour"> <div class="h">17:00</div> <div class="deg">31°</div> <div style="opacity:.7">🌤️</div></div>
+            <div class="hour"> <div class="h">18:00</div> <div class="deg">30°</div> <div style="opacity:.7">🌥️</div></div>
+            <div class="hour"> <div class="h">19:00</div> <div class="deg">28°</div> <div style="opacity:.7">🌥️</div></div>
+            <div class="hour"> <div class="h">20:00</div> <div class="deg">27°</div> <div style="opacity:.7">🌙</div></div>
+          </div>
         </div>
       </div>
-      <div style="opacity:.85;font-size:.95rem">Online</div>
-    </header>
 
-    <main>
-      <div class="iframe-wrap" aria-hidden="false">
-        <iframe id="botIframe" src="https://copilotstudio.microsoft.com/environments/9324e73a-cd4e-e049-b7ba-177af6165e9c/bots/crbf2_k-weatheraiagent_LJgjEd/webchat?__version__=2&enableFileAttachment=false&cliAgent=true&initialLocation=%ED%99%94%EC%84%B1%EC%8B%9C" allow="clipboard-read;clipboard-write;geolocation" title="Weather chat"></iframe>
-      </div>
-    </main>
+      <aside class="summary">
+        <div class="card-mini">
+          <div style="font-weight:800">오늘</div>
+          <div style="margin-top:8px" class="highlow"><div>최고 32°</div><div>최저 26°</div></div>
+        </div>
 
-    <div class="input-row" aria-hidden>
-      <input class="input" placeholder="날씨 관련 무엇이든 물어보세요 — 화성시 기본 설정" />
-      <button class="send">→</button>
+        <div class="card-mini">
+          <div style="font-weight:800">기상 정보</div>
+          <div style="margin-top:8px;display:flex;flex-direction:column;gap:6px">
+            <div>풍속 0.5 m/s</div>
+            <div>습도 60%</div>
+            <div>미세먼지 보통</div>
+          </div>
+        </div>
+
+        <div class="card-mini" style="display:flex;align-items:center;justify-content:center;font-weight:700;color:var(--accent)">화성시 기준</div>
+      </aside>
+    </div>
+
+    <!-- 챗봇은 하단에 배치 -->
+    <div class="card chatbot-wrap" aria-label="챗봇">
+      <iframe id="botIframe" src="https://copilotstudio.microsoft.com/environments/9324e73a-cd4e-e049-b7ba-177af6165e9c/bots/crbf2_k-weatheraiagent_LJgjEd/webchat?__version__=2&enableFileAttachment=false&cliAgent=true&initialLocation=%ED%99%94%EC%84%B1%EC%8B%9C" allow="clipboard-read;clipboard-write;geolocation" title="Weather chat"></iframe>
     </div>
 
     <footer>Made by saturn417</footer>
   </div>
 
   <script>
-    // iframe에 메시지를 보내 초기 위치를 설정하려 시도합니다. (봇이 postMessage를 처리하면 동작)
+    // UI: (옵션) 향후 실제 API로 교체 가능 — 현재는 기본 텍스트로 예시 표시
+    // 챗봇에 초기 위치를 보냄(postMessage) — 내부 봇이 수신하면 기본 위치로 설정
     const iframe = document.getElementById('botIframe');
     function postInitialLocation(){
       const msg = {type:'setLocation', location:'화성시'};
-      iframe.contentWindow?.postMessage(msg, '*');
-      // 또한 URL 파라미터(initialLocation)도 첨부되어 있어, 내부에서 이를 읽어 처리할 수 있다면 기본 위치로 반영됩니다.
+      try{ iframe.contentWindow?.postMessage(msg, '*'); }catch(e){ /* cross-origin일 경우 실패 가능 */ }
     }
-    iframe.addEventListener('load', ()=>{ try{ postInitialLocation(); }catch(e){} });
+    iframe.addEventListener('load', ()=>{ postInitialLocation(); });
+
+    // (선택) 타임라인 클릭으로 활성 시간 변경
+    document.getElementById('timeline').addEventListener('click', (e)=>{
+      const hourEl = e.target.closest('.hour');
+      if(!hourEl) return;
+      document.querySelectorAll('.hour').forEach(h=>h.classList.remove('active'));
+      hourEl.classList.add('active');
+      // 예시: 온도 텍스트 업데이트
+      const deg = hourEl.querySelector('.deg')?.textContent || '';
+      if(deg) document.getElementById('temp').innerHTML = deg.replace('°','') + '<span style="font-size:0.35em">°</span>';
+    });
   </script>
 </body>
 </html>
